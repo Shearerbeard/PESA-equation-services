@@ -1,6 +1,4 @@
-use equation::proto::equation::{
-    CalculationRequest, CalculationResponse, divider_server::Divider,
-};
+use equation::proto::equation::{divider_server::Divider, CalculationRequest, CalculationResponse};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]

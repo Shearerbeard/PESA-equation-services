@@ -3,7 +3,6 @@ const SUBTRACTOR_ADDR: &str = "SUBTRACTOR_ADDR";
 const MULTIPLIER_ADDR: &str = "MULTIPLIER_ADDR";
 const DIVIDER_ADDR: &str = "DIVIDER_ADDR";
 
-
 #[derive(Clone, Debug)]
 pub struct Config {
     pub adder_addr: String,

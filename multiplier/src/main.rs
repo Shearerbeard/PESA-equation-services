@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         .add_service(MultiplierServer::new(service))
-        .serve(config.adder_addr.parse()?)
+        .serve(config.multiplier_addr.parse()?)
         .await?;
 
     println!("Multiplier Shutdown!");
