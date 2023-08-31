@@ -9,3 +9,6 @@ edition = "2021"
 equation = { path = "../equation"}
 tonic = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+actix-rt = "2.9.0"
