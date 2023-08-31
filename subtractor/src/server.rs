@@ -4,10 +4,10 @@ use equation::proto::equation::{
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
-pub(crate) struct SubtractorServer {}
+pub(crate) struct SubtractorService {}
 
 #[tonic::async_trait]
-impl Subtractor for SubtractorServer {
+impl Subtractor for SubtractorService {
     async fn subtract(
         &self,
         request: Request<CalculationRequest>,

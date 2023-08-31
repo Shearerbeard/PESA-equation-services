@@ -2,10 +2,10 @@ use equation::proto::equation::{adder_server::Adder, CalculationRequest, Calcula
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
-pub(crate) struct AdderServer {}
+pub(crate) struct AdderService {}
 
 #[tonic::async_trait]
-impl Adder for AdderServer {
+impl Adder for AdderService {
     async fn add(
         &self,
         request: Request<CalculationRequest>,

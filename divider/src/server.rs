@@ -4,10 +4,10 @@ use equation::proto::equation::{
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
-pub(crate) struct DividerServer {}
+pub(crate) struct DividerService {}
 
 #[tonic::async_trait]
-impl Divider for DividerServer {
+impl Divider for DividerService {
     async fn divide(
         &self,
         request: Request<CalculationRequest>,

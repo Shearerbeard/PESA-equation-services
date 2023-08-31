@@ -4,10 +4,10 @@ use equation::proto::equation::{
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
-pub(crate) struct MultiplierServer {}
+pub(crate) struct MultiplierService {}
 
 #[tonic::async_trait]
-impl Multiplier for MultiplierServer {
+impl Multiplier for MultiplierService {
     async fn multiply(
         &self,
         request: Request<CalculationRequest>,
