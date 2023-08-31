@@ -1,11 +1,15 @@
 [package]
-name = "subtractor"
+name = "equation"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-equation = { path = "../equation"}
+prost = { workspace = true }
 tonic = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true }
+dotenv = { workspace = true }
+
+[build-dependencies]
+tonic-build = "0.9.2"

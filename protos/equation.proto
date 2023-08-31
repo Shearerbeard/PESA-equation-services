@@ -1,0 +1,33 @@
+syntax = "proto3";
+package equation;
+
+service Adder {
+    rpc Add (CalculationRequest) returns (CalculationResponse);
+}
+
+service Subtractor {
+    rpc Subtract (CalculationRequest) returns (CalculationResponse);
+}
+
+service Multiplier {
+    rpc Multiply (CalculationRequest) returns (CalculationResponse);
+}
+
+service Divider {
+    rpc Divide (CalculationRequest) returns (CalculationResponse);
+}
+
+message CalculationRequest {
+    UUID id = 1;
+    int32 first_arg = 2;
+    int32 second_arg = 3;
+}
+
+message CalculationResponse {
+    UUID id = 1;
+    int32 result = 2;
+}
+
+message UUID {
+    string value = 1;
+}
