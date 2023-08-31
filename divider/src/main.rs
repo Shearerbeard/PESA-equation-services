@@ -1,3 +1,5 @@
+mod server;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Divider Init!");
 }

@@ -5,6 +5,10 @@ version = 3
 [[package]]
 name = "adder"
 version = "0.1.0"
+dependencies = [
+ "equation",
+ "tonic",
+]
 
 [[package]]
 name = "addr2line"
@@ -155,6 +159,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "divider"
 version = "0.1.0"
+dependencies = [
+ "equation",
+ "tonic",
+]
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "either"
@@ -163,9 +177,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 
 [[package]]
-name = "equation-services"
+name = "equation"
 version = "0.1.0"
 dependencies = [
+ "dotenv",
+ "prost",
+ "tokio",
+ "tonic",
  "tonic-build",
 ]
 
@@ -489,6 +507,10 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 [[package]]
 name = "multiplier"
 version = "0.1.0"
+dependencies = [
+ "equation",
+ "tonic",
+]
 
 [[package]]
 name = "num_cpus"
@@ -519,7 +541,7 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 name = "orchestrator"
 version = "0.1.0"
 dependencies = [
- "prost",
+ "equation",
  "tokio",
  "tonic",
 ]
@@ -805,6 +827,10 @@ dependencies = [
 [[package]]
 name = "subtractor"
 version = "0.1.0"
+dependencies = [
+ "equation",
+ "tonic",
+]
 
 [[package]]
 name = "syn"

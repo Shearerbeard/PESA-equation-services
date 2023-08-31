@@ -14,13 +14,13 @@ service Multiplier {
 }
 
 service Divider {
-    rpc Divice (CalculationRequest) returns (CalculationResponse);
+    rpc Divide (CalculationRequest) returns (CalculationResponse);
 }
 
 message CalculationRequest {
     UUID id = 1;
-    int32 first = 2;
-    int32 second = 3;
+    int32 first_arg = 2;
+    int32 second_arg = 3;
 }
 
 message CalculationResponse {
