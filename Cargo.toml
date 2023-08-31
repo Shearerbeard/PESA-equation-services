@@ -14,3 +14,11 @@ members = [
     "multiplier",
     "divider"
 ]
+
+[workspace.dependencies]
+prost = "0.11.9"
+tonic = "0.9.2"
+tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
+
+[build-dependencies]
+tonic-build = "0.9.2"

@@ -1,3 +1,3 @@
 fn main() {
-    println!("Hello, world!");
+    tonic::include_proto!("equation");
 }
