@@ -67,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Blocking on signal for CTRL-C");
     signal_rx.recv().await;
-    println!("RECEIVED CTRL-C - SHUTTING DOWN");
+    println!("RECEIVED CTRL-C - SHUTTING DOWN SERVICES");
     clients.shutdown().await;
 
     Ok(())
