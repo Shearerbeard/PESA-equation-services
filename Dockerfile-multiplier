@@ -1,0 +1,11 @@
+FROM rust:1.72.0
+WORKDIR /code
+COPY . .
+
+ENV PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+RUN curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
+RUN unzip protoc-3.15.8-linux-x86_64.zip -d protoc
+ENV PATH="/code/protoc/bin:${PATH}"
+
+RUN cargo install --path ./multiplier
+CMD ["multiplier"]
