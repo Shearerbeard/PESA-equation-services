@@ -3,19 +3,42 @@ use equation::{
         build_adder_client, build_divider_client, build_multiplier_client, build_subtractor_client,
     },
     config::Config,
-    proto::equation::Empty,
+    parse::{test_value, MathAST},
+    proto::equation::{
+        adder_client::AdderClient, divider_client::DividerClient,
+        multiplier_client::MultiplierClient, subtractor_client::SubtractorClient,
+        CalculationResponse, Empty,
+    },
     server::wait_for_ctrl_c,
 };
 use tokio::{spawn, sync::mpsc};
+use tonic::{transport::Channel, Response, Status};
+
+#[derive(Clone)]
+struct Clients {
+    adder_client: AdderClient<Channel>,
+    subtractor_client: SubtractorClient<Channel>,
+    multiplier_client: MultiplierClient<Channel>,
+    divider_client: DividerClient<Channel>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::new();
 
+    let ast = test_value();
+
     let mut adder_client = build_adder_client(&config).await?;
     let mut subtractor_client = build_subtractor_client(&config).await?;
     let mut multiplier_client = build_multiplier_client(&config).await?;
     let mut divider_client = build_divider_client(&config).await?;
+
+    let mut clients = Clients {
+        adder_client,
+        subtractor_client,
+        multiplier_client,
+        divider_client,
+    };
 
     let (signal_tx, mut signal_rx) = mpsc::channel(100);
     spawn(wait_for_ctrl_c(signal_tx));
@@ -24,12 +47,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     signal_rx.recv().await;
     println!("RECEIVED CTRL-C - SHUTTING DOWN");
     let message = Empty {};
-    let _ = adder_client.term(message.clone()).await;
-    let _ = subtractor_client.term(message.clone()).await;
-    let _ = multiplier_client.term(message.clone()).await;
-    let _ = divider_client.term(message).await;
+    let _ = clients.adder_client.term(message.clone()).await;
+    let _ = clients.subtractor_client.term(message.clone()).await;
+    let _ = clients.multiplier_client.term(message.clone()).await;
+    let _ = clients.divider_client.term(message).await;
 
     Ok(())
+}
+
+async fn run_distributed_equation(
+    clients: &mut Clients,
+    ast: MathAST,
+) -> Result<Response<CalculationResponse>, Status> {
+    match ast {
+        MathAST::Value(_) => ast,
+        MathAST::Add(_, _) => {
+            todo!()
+        }
+        MathAST::Subtract(_, _) => {
+            todo!()
+        }
+        MathAST::Multiply(_, _) => {
+            todo!()
+        }
+        MathAST::Divide(_, _) => {
+            todo!()
+        }
+    }
 }
 
 #[cfg(test)]
