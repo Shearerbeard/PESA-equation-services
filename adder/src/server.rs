@@ -41,7 +41,9 @@ impl AdderService {
         let mut sc = self.subtract_client.lock().await;
 
         if sc.is_none() {
+            println!("Adder has no subtract client - retrying");
             let res = build_subtractor_client(&self.config).await.unwrap();
+            println!("Adder subtract client retry result {:?}", &res);
             *sc = Some(res);
         }
 
@@ -54,7 +56,9 @@ impl AdderService {
         let mut mc = self.multiply_client.lock().await;
 
         if mc.is_none() {
+            println!("Adder has no multiply client - retrying");
             let res = build_multiplier_client(&self.config).await.unwrap();
+            println!("Adder multiply client retry result {:?}", &res);
             *mc = Some(res);
         }
 
@@ -67,7 +71,9 @@ impl AdderService {
         let mut dc = self.divide_client.lock().await;
 
         if dc.is_none() {
+            println!("Adder has no multiply divide client- retrying");
             let res = build_divider_client(&self.config).await.unwrap();
+            println!("Adder divide client retry result {:?}", &res);
             *dc = Some(res);
         }
 
@@ -79,9 +85,11 @@ impl AdderService {
 #[async_trait]
 impl MathASTEvaluator<Error> for AdderService {
     async fn add(&self, first: i32, second: i32) -> Result<i32, Error> {
+        println!("Adder Add: {:?} + {:?}", first, second);
         Ok(first + second)
     }
     async fn subtract(&self, first: i32, second: i32) -> Result<i32, Error> {
+        println!("Adder Delegate Subtract: {:?} - {:?}", first, second);
         let message = CalculationRequest {
             first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
@@ -98,6 +106,7 @@ impl MathASTEvaluator<Error> for AdderService {
         Ok(res.result)
     }
     async fn multiply(&self, first: i32, second: i32) -> Result<i32, Error> {
+        println!("Adder Delegate Multiply: {:?} * {:?}", first, second);
         let message = CalculationRequest {
             first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
@@ -114,6 +123,7 @@ impl MathASTEvaluator<Error> for AdderService {
         Ok(res.result)
     }
     async fn divide(&self, first: i32, second: i32) -> Result<i32, Error> {
+        println!("Adder Delegate Divide: {:?} / {:?}", first, second);
         let message = CalculationRequest {
             first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
@@ -142,7 +152,7 @@ impl Adder for AdderService {
         let first: MathAST = serde_json::from_str(&inner.first_arg).map_err(|_| {
             Status::invalid_argument(format!("Invalid AST: {:#?}", &inner.first_arg))
         })?;
-        let second: MathAST = serde_json::from_str(&inner.first_arg).map_err(|_| {
+        let second: MathAST = serde_json::from_str(&inner.second_arg).map_err(|_| {
             Status::invalid_argument(format!("Invalid AST: {:#?}", &inner.second_arg))
         })?;
 

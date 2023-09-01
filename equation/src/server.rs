@@ -4,7 +4,7 @@ use tonic::Status;
 pub enum Error {
     SerdeJSON(serde_json::Error),
     ExternalServiceStatus(Status),
-    NoClientConnectionEstablished
+    NoClientConnectionEstablished,
 }
 
 impl From<Error> for Status {

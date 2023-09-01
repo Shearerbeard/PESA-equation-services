@@ -28,8 +28,8 @@ mod tests {
         let mut client = build_adder_client(&config).await.unwrap();
 
         let request = tonic::Request::new(CalculationRequest {
-            first_arg: 1.to_string(),
-            second_arg: 2.to_string(),
+            first_arg: serde_json::to_string(&MathAST::Value(1)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.add(request).await.unwrap().into_inner();
@@ -43,8 +43,8 @@ mod tests {
         let mut client = build_subtractor_client(&config).await.unwrap();
 
         let request = tonic::Request::new(CalculationRequest {
-            first_arg: 5.to_string(),
-            second_arg: 2.to_string(),
+            first_arg: serde_json::to_string(&MathAST::Value(5)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.subtract(request).await.unwrap().into_inner();
