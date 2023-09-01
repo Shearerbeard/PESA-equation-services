@@ -13,7 +13,6 @@ impl Divider for DividerService {
         let inner = request.into_inner();
 
         Ok(Response::new(CalculationResponse {
-            id: inner.id,
             result: inner.first_arg / inner.second_arg,
         }))
     }
