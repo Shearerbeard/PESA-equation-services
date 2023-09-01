@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 equation = { path = "../equation"}
 tonic = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
 serde_json = { workspace = true }
 
 [dev-dependencies]

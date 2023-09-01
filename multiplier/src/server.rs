@@ -8,16 +8,17 @@ use equation::{
     parse::{MathAST, MathASTEvaluator},
     proto::equation::{
         adder_client::AdderClient, divider_client::DividerClient, multiplier_server::Multiplier,
-        subtractor_client::SubtractorClient, CalculationRequest, CalculationResponse,
+        subtractor_client::SubtractorClient, CalculationRequest, CalculationResponse, Empty,
     },
     server::Error,
 };
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc::Sender, Mutex};
 use tonic::{transport::Channel, Request, Response, Status};
 
 #[derive(Debug)]
 pub(crate) struct MultiplierService {
     config: Config,
+    term_channel: Arc<Mutex<Sender<()>>>,
     add_client: Arc<Mutex<Option<AdderClient<Channel>>>>,
     subtract_client: Arc<Mutex<Option<SubtractorClient<Channel>>>>,
     divide_client: Arc<Mutex<Option<DividerClient<Channel>>>>,
@@ -27,9 +28,10 @@ impl MultiplierService {
     /// Create new MultiplierService - get whatever external service connections we can on boot
     /// The others can be initialized at request time (cold start problem - all micro services start roughly the same time but have
     /// inter dependencies and require a persistant TCP connection)
-    pub(crate) async fn new(config: &Config) -> Self {
+    pub(crate) async fn new(config: &Config, term_channel: Sender<()>) -> Self {
         Self {
             config: config.clone(),
+            term_channel: Arc::new(Mutex::new(term_channel)),
             add_client: Arc::new(Mutex::new(build_adder_client(&config).await.ok())),
             subtract_client: Arc::new(Mutex::new(build_subtractor_client(&config).await.ok())),
             divide_client: Arc::new(Mutex::new(build_divider_client(&config).await.ok())),
@@ -162,6 +164,13 @@ impl Multiplier for MultiplierService {
         Ok(Response::new(TryInto::<CalculationResponse>::try_into(
             res,
         )?))
+    }
+
+    async fn term(&self, _: Request<Empty>) -> Result<Response<Empty>, Status> {
+        let channel = self.term_channel.lock().await;
+        let _ = channel.send(()).await;
+
+        Ok(Response::new(Empty {}))
     }
 }
 
