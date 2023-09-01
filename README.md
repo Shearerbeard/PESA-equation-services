@@ -6,9 +6,10 @@
 
 ###
 Running via Shell
-- Run all background microservices by running ```sh
+- Run all background microservices by running
+```sh
 chmod +x ./init-services.sh
 ./init-services.sh
-  ```
+```
 - Run tests while services are still up in a new terminal session with ```cargo test```
 - Run our test application with ```cargo run --package orchestrator``` - notice the main process will block after evaluation. Ctrl+C will stop the program and terminate downstream microservice nodes
