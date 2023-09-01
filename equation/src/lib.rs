@@ -1,6 +1,6 @@
 pub mod config;
-pub mod proto;
 pub mod parse;
+pub mod proto;
 
 #[cfg(test)]
 mod tests {

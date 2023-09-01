@@ -11,4 +11,4 @@ tonic = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
 [dev-dependencies]
-actix-rt = "2.9.0"
+actix-rt = { workspace = true }
