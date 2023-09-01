@@ -1,0 +1,7 @@
+FROM rust:1.72.0
+WORKDIR /code
+COPY . .
+
+RUN cargo install protobuf
+RUN cargo install --path ./adder
+CMD ["adder"]

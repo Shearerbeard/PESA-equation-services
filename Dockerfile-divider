@@ -1,0 +1,7 @@
+FROM rust:1.72.0
+WORKDIR /code
+COPY . .
+
+RUN apt install -y protobuf-compiler
+RUN cargo install --path ./divider
+CMD ["divider"]

@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  adder:
+    build:
+      context: .
+      dockerfile: Dockerfile-adder
+    ports:
+      - 50051:50051
+  subtractor:
+    build:
+      context: .
+      dockerfile: Dockerfile-subtractor
+    ports:
+      - 50052:50052
+  multiplier:
+    build:
+      context: .
+      dockerfile: Dockerfile-multiplier
+    ports:
+      - 50053:50053
+  divider:
+    build:
+      context: .
+      dockerfile: Dockerfile-divider
+    ports:
+      - 50054:50054
