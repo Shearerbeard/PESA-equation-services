@@ -83,6 +83,8 @@ pub trait MathASTEvaluator<E: Send + Sync> {
 
 #[cfg(test)]
 mod tests {
+    use assert_matches::assert_matches;
+
     use super::*;
 
     struct TestASTEvaluator {}
@@ -107,18 +109,19 @@ mod tests {
     async fn test_ast_eval() {
         let mut ast = test_value();
 
-        let mut depth = 10;
+        let depth = 10;
 
-        for i in 0..depth {
-            println!("Iteration {:?}", i);
-            depth = i;
-
+        for _ in 0..depth {
             ast = TestASTEvaluator::eval(ast.clone()).await.unwrap();
+
             if let MathAST::Value(_) = ast {
                 break;
             }
         }
 
-        println!("Result: {:#?} at depth {:?}", ast, depth);
+        assert_matches!(
+            ast,
+            MathAST::Value(v) if v == 1
+        );
     }
 }

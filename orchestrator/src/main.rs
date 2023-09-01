@@ -20,8 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use equation::proto::equation::{CalculationRequest, CalculationResponse, Uuid};
-    use tonic::Response;
+    use equation::proto::equation::{CalculationRequest, Uuid};
 
     #[actix_rt::test]
     async fn test_adder() {
