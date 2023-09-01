@@ -3,18 +3,22 @@ package equation;
 
 service Adder {
     rpc Add (CalculationRequest) returns (CalculationResponse);
+    rpc Term (Empty) returns (Empty);
 }
 
 service Subtractor {
     rpc Subtract (CalculationRequest) returns (CalculationResponse);
+    rpc Term (Empty) returns (Empty);
 }
 
 service Multiplier {
     rpc Multiply (CalculationRequest) returns (CalculationResponse);
+    rpc Term (Empty) returns (Empty);
 }
 
 service Divider {
     rpc Divide (CalculationRequest) returns (CalculationResponse);
+    rpc Term (Empty) returns (Empty);
 }
 
 message CalculationRequest {
@@ -24,4 +28,7 @@ message CalculationRequest {
 
 message CalculationResponse {
     int32 result = 2;
+}
+
+message Empty {
 }

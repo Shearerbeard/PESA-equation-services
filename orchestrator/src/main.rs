@@ -3,7 +3,10 @@ use equation::{
         build_adder_client, build_divider_client, build_multiplier_client, build_subtractor_client,
     },
     config::Config,
+    proto::equation::Empty,
+    server::wait_for_ctrl_c,
 };
+use tokio::{spawn, sync::mpsc};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,6 +16,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut subtractor_client = build_subtractor_client(&config).await?;
     let mut multiplier_client = build_multiplier_client(&config).await?;
     let mut divider_client = build_divider_client(&config).await?;
+
+    let (signal_tx, mut signal_rx) = mpsc::channel(100);
+    spawn(wait_for_ctrl_c(signal_tx));
+
+    println!("Blocking on signal for CTRL-C");
+    signal_rx.recv().await;
+    println!("RECEIVED CTRL-C - SHUTTING DOWN");
+    let message = Empty {};
+    let _ = adder_client.term(message.clone()).await;
+    let _ = subtractor_client.term(message.clone()).await;
+    let _ = multiplier_client.term(message.clone()).await;
+    let _ = divider_client.term(message).await;
 
     Ok(())
 }
