@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Subtractor Init!");
 
     let config = Config::new();
-    let service = SubtractorService::default();
+    let service = SubtractorService::new(&config).await;
 
     Server::builder()
         .add_service(SubtractorServer::new(service))

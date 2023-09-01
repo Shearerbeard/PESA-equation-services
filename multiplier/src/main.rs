@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Multiplier Init!");
 
     let config = Config::new();
-    let service = MultiplierService::default();
+    let service = MultiplierService::new(&config).await;
 
     Server::builder()
         .add_service(MultiplierServer::new(service))

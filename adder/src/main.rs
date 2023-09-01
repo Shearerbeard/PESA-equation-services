@@ -9,9 +9,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Adder Init!");
 
     let config = Config::new();
-    let service = AdderService::default();
-
-    println!("Config: {:#?}", config);
+    let service = AdderService::new(&config).await;
 
     Server::builder()
         .add_service(AdderServer::new(service))

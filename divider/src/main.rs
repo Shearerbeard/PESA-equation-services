@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Divider Init!");
 
     let config = Config::new();
-    let service = DividerService::default();
+    let service = DividerService::new(&config).await;
 
     Server::builder()
         .add_service(DividerServer::new(service))

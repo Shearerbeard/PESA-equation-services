@@ -1,9 +1,9 @@
-use client::{
-    build_adder_client, build_divider_client, build_multiplier_client, build_subtractor_client,
+use equation::{
+    client::{
+        build_adder_client, build_divider_client, build_multiplier_client, build_subtractor_client,
+    },
+    config::Config,
 };
-use equation::config::Config;
-
-mod client;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,27 +20,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use equation::proto::equation::{CalculationRequest, CalculationResponse, Uuid};
-    use tonic::Response;
+    use equation::{parse::MathAST, proto::equation::CalculationRequest};
 
     #[actix_rt::test]
     async fn test_adder() {
         let config = Config::new();
         let mut client = build_adder_client(&config).await.unwrap();
 
-        let id = "AXXXXXXXXXXXXXXXX";
-
         let request = tonic::Request::new(CalculationRequest {
-            id: Some(Uuid {
-                value: id.to_string(),
-            }),
-            first_arg: 1,
-            second_arg: 2,
+            first_arg: serde_json::to_string(&MathAST::Value(1)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.add(request).await.unwrap().into_inner();
 
-        assert_eq!(message.id.unwrap().value, id);
         assert_eq!(message.result, 3);
     }
 
@@ -49,19 +42,13 @@ mod tests {
         let config = Config::new();
         let mut client = build_subtractor_client(&config).await.unwrap();
 
-        let id = "SXXXXXXXXXXXXXXXX";
-
         let request = tonic::Request::new(CalculationRequest {
-            id: Some(Uuid {
-                value: id.to_string(),
-            }),
-            first_arg: 5,
-            second_arg: 2,
+            first_arg: serde_json::to_string(&MathAST::Value(5)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.subtract(request).await.unwrap().into_inner();
 
-        assert_eq!(message.id.unwrap().value, id);
         assert_eq!(message.result, 3);
     }
 
@@ -70,19 +57,13 @@ mod tests {
         let config = Config::new();
         let mut client = build_multiplier_client(&config).await.unwrap();
 
-        let id = "MXXXXXXXXXXXXXXXX";
-
         let request = tonic::Request::new(CalculationRequest {
-            id: Some(Uuid {
-                value: id.to_string(),
-            }),
-            first_arg: 5,
-            second_arg: 2,
+            first_arg: serde_json::to_string(&MathAST::Value(5)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.multiply(request).await.unwrap().into_inner();
 
-        assert_eq!(message.id.unwrap().value, id);
         assert_eq!(message.result, 10);
     }
 
@@ -91,19 +72,37 @@ mod tests {
         let config = Config::new();
         let mut client = build_divider_client(&config).await.unwrap();
 
-        let id = "DXXXXXXXXXXXXXXXX";
-
         let request = tonic::Request::new(CalculationRequest {
-            id: Some(Uuid {
-                value: id.to_string(),
-            }),
-            first_arg: 4,
-            second_arg: 2,
+            first_arg: serde_json::to_string(&MathAST::Value(4)).unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
         });
 
         let message = client.divide(request).await.unwrap().into_inner();
 
-        assert_eq!(message.id.unwrap().value, id);
         assert_eq!(message.result, 2);
+    }
+
+    #[actix_rt::test]
+    async fn test_e2e() {
+        let config = Config::new();
+        let mut client = build_subtractor_client(&config).await.unwrap();
+
+        let request = tonic::Request::new(CalculationRequest {
+            first_arg: serde_json::to_string(&MathAST::Divide(
+                Box::new(MathAST::Multiply(
+                    Box::new(MathAST::Add(
+                        Box::new(MathAST::Value(3)),
+                        Box::new(MathAST::Value(3)),
+                    )),
+                    Box::new(MathAST::Value(2)),
+                )),
+                Box::new(MathAST::Value(4)),
+            ))
+            .unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
+        });
+
+        let message = client.subtract(request).await.unwrap().into_inner();
+        assert_eq!(message.result, 1);
     }
 }

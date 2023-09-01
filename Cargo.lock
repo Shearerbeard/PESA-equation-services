@@ -27,7 +27,10 @@ dependencies = [
 name = "adder"
 version = "0.1.0"
 dependencies = [
+ "async-recursion",
+ "async-trait",
  "equation",
+ "serde_json",
  "tokio",
  "tonic",
 ]
@@ -61,6 +64,23 @@ name = "anyhow"
 version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
+
+[[package]]
+name = "assert_matches"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
+
+[[package]]
+name = "async-recursion"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e97ce7de6cf12de5d7226c73f5ba9811622f4db3a5b91b55c53e987e5f91cba"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.29",
+]
 
 [[package]]
 name = "async-trait"
@@ -182,7 +202,10 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "divider"
 version = "0.1.0"
 dependencies = [
+ "async-recursion",
+ "async-trait",
  "equation",
+ "serde_json",
  "tokio",
  "tonic",
 ]
@@ -203,8 +226,13 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 name = "equation"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
+ "assert_matches",
+ "async-trait",
  "dotenv",
  "prost",
+ "serde",
+ "serde_json",
  "tokio",
  "tonic",
  "tonic-build",
@@ -541,7 +569,10 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 name = "multiplier"
 version = "0.1.0"
 dependencies = [
+ "async-recursion",
+ "async-trait",
  "equation",
+ "serde_json",
  "tokio",
  "tonic",
 ]
@@ -577,6 +608,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "equation",
+ "serde_json",
  "tokio",
  "tonic",
 ]
@@ -834,6 +866,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ffc183a10b4478d04cbbbfc96d0873219d962dd5accaff2ffbd4ceb7df837f4"
 
 [[package]]
+name = "ryu"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+
+[[package]]
 name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -857,6 +895,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.29",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.105"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
@@ -907,7 +956,10 @@ dependencies = [
 name = "subtractor"
 version = "0.1.0"
 dependencies = [
+ "async-recursion",
+ "async-trait",
  "equation",
+ "serde_json",
  "tokio",
  "tonic",
 ]

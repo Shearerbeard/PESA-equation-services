@@ -18,16 +18,10 @@ service Divider {
 }
 
 message CalculationRequest {
-    UUID id = 1;
-    int32 first_arg = 2;
-    int32 second_arg = 3;
+    string first_arg = 1;
+    string second_arg = 2;
 }
 
 message CalculationResponse {
-    UUID id = 1;
     int32 result = 2;
-}
-
-message UUID {
-    string value = 1;
 }
