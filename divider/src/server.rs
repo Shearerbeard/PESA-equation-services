@@ -1,8 +1,139 @@
-use equation::proto::equation::{divider_server::Divider, CalculationRequest, CalculationResponse};
-use tonic::{Request, Response, Status};
+use std::sync::Arc;
 
-#[derive(Debug, Default)]
-pub(crate) struct DividerService {}
+use async_recursion::async_recursion;
+use async_trait::async_trait;
+use equation::{
+    client::{build_adder_client, build_multiplier_client, build_subtractor_client},
+    config::Config,
+    parse::{MathAST, MathASTEvaluator},
+    proto::equation::{
+        adder_client::AdderClient, divider_server::Divider, multiplier_client::MultiplierClient,
+        subtractor_client::SubtractorClient, CalculationRequest, CalculationResponse,
+    },
+    server::Error,
+};
+use tokio::sync::Mutex;
+use tonic::{transport::Channel, Request, Response, Status};
+
+#[derive(Debug)]
+pub(crate) struct DividerService {
+    config: Config,
+    add_client: Arc<Mutex<Option<AdderClient<Channel>>>>,
+    subtract_client: Arc<Mutex<Option<SubtractorClient<Channel>>>>,
+    multiply_client: Arc<Mutex<Option<MultiplierClient<Channel>>>>,
+}
+
+impl DividerService {
+    /// Create new DividerService - get whatever external service connections we can on boot
+    /// The others can be initialized at request time (cold start problem - all micro services start roughly the same time but have
+    /// inter dependencies and require a persistant TCP connection)
+    pub(crate) async fn new(config: &Config) -> Self {
+        Self {
+            config: config.clone(),
+            add_client: Arc::new(Mutex::new(build_adder_client(&config).await.ok())),
+            subtract_client: Arc::new(Mutex::new(build_subtractor_client(&config).await.ok())),
+            multiply_client: Arc::new(Mutex::new(build_multiplier_client(&config).await.ok())),
+        }
+    }
+
+    /// Get current addition service connection or try again
+    async fn get_add_client(&self) -> Result<AdderClient<Channel>, Error> {
+        let mut ac = self.add_client.lock().await;
+
+        if ac.is_none() {
+            let res = build_adder_client(&self.config).await.unwrap();
+            *ac = Some(res);
+        }
+
+        ac.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
+    }
+
+    /// Get current subtraction service connection or try again
+    async fn get_subtract_client(&self) -> Result<SubtractorClient<Channel>, Error> {
+        let mut sc = self.subtract_client.lock().await;
+
+        if sc.is_none() {
+            let res = build_subtractor_client(&self.config).await.unwrap();
+            *sc = Some(res);
+        }
+
+        sc.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
+    }
+
+    /// Get current multiplication service connection or try again
+    async fn get_mutiply_client(&self) -> Result<MultiplierClient<Channel>, Error> {
+        let mut mc: tokio::sync::MutexGuard<'_, Option<MultiplierClient<Channel>>> =
+            self.multiply_client.lock().await;
+
+        if mc.is_none() {
+            let res = build_multiplier_client(&self.config).await.unwrap();
+            *mc = Some(res);
+        }
+
+        mc.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
+    }
+}
+
+#[async_trait]
+impl MathASTEvaluator<Error> for DividerService {
+    async fn add(&self, first: i32, second: i32) -> Result<i32, Error> {
+        let message = CalculationRequest {
+            first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
+            second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
+        };
+
+        let mut add_client = self.get_add_client().await?;
+
+        let res = add_client
+            .add(message)
+            .await
+            .map_err(Error::ExternalServiceStatus)?
+            .into_inner();
+
+        Ok(res.result)
+    }
+
+    async fn subtract(&self, first: i32, second: i32) -> Result<i32, Error> {
+        let message = CalculationRequest {
+            first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
+            second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
+        };
+
+        let mut subtract_client = self.get_subtract_client().await?;
+
+        let res = subtract_client
+            .subtract(message)
+            .await
+            .map_err(Error::ExternalServiceStatus)?
+            .into_inner();
+
+        Ok(res.result)
+    }
+
+    async fn multiply(&self, first: i32, second: i32) -> Result<i32, Error> {
+        let message = CalculationRequest {
+            first_arg: serde_json::to_string(&MathAST::Value(first)).map_err(Error::SerdeJSON)?,
+            second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
+        };
+
+        let mut multiply_client = self.get_mutiply_client().await?;
+
+        let res = multiply_client
+            .multiply(message)
+            .await
+            .map_err(Error::ExternalServiceStatus)?
+            .into_inner();
+
+        Ok(res.result)
+    }
+
+    async fn divide(&self, first: i32, second: i32) -> Result<i32, Error> {
+        Ok(first / second)
+    }
+}
 
 #[tonic::async_trait]
 impl Divider for DividerService {
@@ -12,8 +143,27 @@ impl Divider for DividerService {
     ) -> Result<Response<CalculationResponse>, Status> {
         let inner = request.into_inner();
 
-        Ok(Response::new(CalculationResponse {
-            result: inner.first_arg / inner.second_arg,
-        }))
+        let first: MathAST = serde_json::from_str(&inner.first_arg).map_err(|_| {
+            Status::invalid_argument(format!("Invalid AST: {:#?}", &inner.first_arg))
+        })?;
+        let second: MathAST = serde_json::from_str(&inner.first_arg).map_err(|_| {
+            Status::invalid_argument(format!("Invalid AST: {:#?}", &inner.second_arg))
+        })?;
+
+        let res = try_from_ast(self, MathAST::Divide(Box::new(first), Box::new(second))).await?;
+
+        Ok(Response::new(TryInto::<CalculationResponse>::try_into(
+            res,
+        )?))
+    }
+}
+
+/// See if we can get MathAST::Value(int32) from current AST - if not recurse and try again after running eval()
+#[async_recursion]
+async fn try_from_ast(service: &DividerService, ast: MathAST) -> Result<MathAST, Error> {
+    if let MathAST::Value(_) = &ast {
+        Ok(ast)
+    } else {
+        try_from_ast(service, service.eval(ast).await?).await
     }
 }

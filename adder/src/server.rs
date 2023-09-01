@@ -3,39 +3,76 @@ use std::sync::Arc;
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use equation::{
+    client::{build_divider_client, build_multiplier_client, build_subtractor_client},
+    config::Config,
     parse::{MathAST, MathASTEvaluator},
     proto::equation::{
         adder_server::Adder, divider_client::DividerClient, multiplier_client::MultiplierClient,
         subtractor_client::SubtractorClient, CalculationRequest, CalculationResponse,
     },
+    server::Error,
 };
 use tokio::sync::Mutex;
 use tonic::{transport::Channel, Request, Response, Status};
 
-use crate::error::Error;
-
 #[derive(Debug)]
 pub(crate) struct AdderService {
-    subtract_client: Arc<Mutex<SubtractorClient<Channel>>>,
-    multiply_client: Arc<Mutex<MultiplierClient<Channel>>>,
-    divide_client: Arc<Mutex<DividerClient<Channel>>>,
+    config: Config,
+    subtract_client: Arc<Mutex<Option<SubtractorClient<Channel>>>>,
+    multiply_client: Arc<Mutex<Option<MultiplierClient<Channel>>>>,
+    divide_client: Arc<Mutex<Option<DividerClient<Channel>>>>,
 }
 
-// pub (crate) struct ExternalServices {
-
-// }
-
 impl AdderService {
-    pub(crate) fn new(
-        sub: SubtractorClient<Channel>,
-        mult: MultiplierClient<Channel>,
-        div: DividerClient<Channel>,
-    ) -> Self {
+    /// Create new AdderService - get whatever external service connections we can on boot
+    /// The others can be initialized at request time (cold start problem - all micro services start roughly the same time but have
+    /// inter dependencies and require a persistant TCP connection)
+    pub(crate) async fn new(config: &Config) -> Self {
         Self {
-            subtract_client: Arc::new(Mutex::new(sub)),
-            multiply_client: Arc::new(Mutex::new(mult)),
-            divide_client: Arc::new(Mutex::new(div)),
+            config: config.clone(),
+            subtract_client: Arc::new(Mutex::new(build_subtractor_client(&config).await.ok())),
+            multiply_client: Arc::new(Mutex::new(build_multiplier_client(&config).await.ok())),
+            divide_client: Arc::new(Mutex::new(build_divider_client(&config).await.ok())),
         }
+    }
+
+    /// Get current subtraction service connection or try again
+    async fn get_subtract_client(&self) -> Result<SubtractorClient<Channel>, Error> {
+        let mut sc = self.subtract_client.lock().await;
+
+        if sc.is_none() {
+            let res = build_subtractor_client(&self.config).await.unwrap();
+            *sc = Some(res);
+        }
+
+        sc.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
+    }
+
+    /// Get current multiplication service connection or try again
+    async fn get_mutiply_client(&self) -> Result<MultiplierClient<Channel>, Error> {
+        let mut mc = self.multiply_client.lock().await;
+
+        if mc.is_none() {
+            let res = build_multiplier_client(&self.config).await.unwrap();
+            *mc = Some(res);
+        }
+
+        mc.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
+    }
+
+    /// Get current division service connection or try again
+    async fn get_divider_client(&self) -> Result<DividerClient<Channel>, Error> {
+        let mut dc = self.divide_client.lock().await;
+
+        if dc.is_none() {
+            let res = build_divider_client(&self.config).await.unwrap();
+            *dc = Some(res);
+        }
+
+        dc.clone()
+            .ok_or_else(|| Error::NoClientConnectionEstablished)
     }
 }
 
@@ -50,7 +87,7 @@ impl MathASTEvaluator<Error> for AdderService {
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
         };
 
-        let mut subtract_client = self.subtract_client.lock().await;
+        let mut subtract_client = self.get_subtract_client().await?;
 
         let res = subtract_client
             .subtract(message)
@@ -66,7 +103,7 @@ impl MathASTEvaluator<Error> for AdderService {
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
         };
 
-        let mut multiply_client = self.multiply_client.lock().await;
+        let mut multiply_client = self.get_mutiply_client().await?;
 
         let res = multiply_client
             .multiply(message)
@@ -82,7 +119,7 @@ impl MathASTEvaluator<Error> for AdderService {
             second_arg: serde_json::to_string(&MathAST::Value(second)).map_err(Error::SerdeJSON)?,
         };
 
-        let mut divide_client = self.divide_client.lock().await;
+        let mut divide_client = self.get_divider_client().await?;
 
         let res = divide_client
             .divide(message)
@@ -117,6 +154,7 @@ impl Adder for AdderService {
     }
 }
 
+/// See if we can get MathAST::Value(int32) from current AST - if not recurse and try again after running eval()
 #[async_recursion]
 async fn try_from_ast(service: &AdderService, ast: MathAST) -> Result<MathAST, Error> {
     if let MathAST::Value(_) = &ast {
