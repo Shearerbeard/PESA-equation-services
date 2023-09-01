@@ -81,4 +81,28 @@ mod tests {
 
         assert_eq!(message.result, 2);
     }
+
+    #[actix_rt::test]
+    async fn test_e2e() {
+        let config = Config::new();
+        let mut client = build_subtractor_client(&config).await.unwrap();
+
+        let request = tonic::Request::new(CalculationRequest {
+            first_arg: serde_json::to_string(&MathAST::Divide(
+                Box::new(MathAST::Multiply(
+                    Box::new(MathAST::Add(
+                        Box::new(MathAST::Value(3)),
+                        Box::new(MathAST::Value(3)),
+                    )),
+                    Box::new(MathAST::Value(2)),
+                )),
+                Box::new(MathAST::Value(4)),
+            ))
+            .unwrap(),
+            second_arg: serde_json::to_string(&MathAST::Value(2)).unwrap(),
+        });
+
+        let message = client.subtract(request).await.unwrap().into_inner();
+        assert_eq!(message.result, 1);
+    }
 }
