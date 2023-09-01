@@ -6,21 +6,34 @@ services:
       dockerfile: Dockerfile-adder
     ports:
       - 50051:50051
+      - 50052:50052
+      - 50053:50053
+      - 50054:50054
+
   subtractor:
     build:
       context: .
       dockerfile: Dockerfile-subtractor
     ports:
+      - 50051:50051
       - 50052:50052
+      - 50053:50053
+      - 50054:50054
   multiplier:
     build:
       context: .
       dockerfile: Dockerfile-multiplier
     ports:
+      - 50051:50051
+      - 50052:50052
       - 50053:50053
+      - 50054:50054
   divider:
     build:
       context: .
       dockerfile: Dockerfile-divider
     ports:
+      - 50051:50051
+      - 50052:50052
+      - 50053:50053
       - 50054:50054
